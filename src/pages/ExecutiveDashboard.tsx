@@ -6,8 +6,11 @@ const ExecutiveDashboard = () => {
   const { data, loading, error } = useSignals();
 
   if (loading) return <div className="flex h-full items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div></div>;
-  if (error) return <div className="text-red-500">Error loading data: {error}</div>;
-  if (!data) return null;
+  if (error) return <div className="p-6 text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg m-4">⚠️ Error loading data: {error}</div>;
+
+  // 安全なデフォルト値を設定（データが空でもクラッシュしない）
+  const summary = data?.summary || { totalArticles: 0, emergingSignals: 0, criticalAlerts: 0 };
+  const topSignals = data?.topSignals || [];
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -18,9 +21,9 @@ const ExecutiveDashboard = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <KpiCard title="Total Monitored Articles" value={data.summary.totalArticles} icon={<FileTextIcon />} color="text-blue-400" />
-        <KpiCard title="Emerging Signals" value={data.summary.emergingSignals} icon={<TrendingUp />} color="text-green-400" />
-        <KpiCard title="Critical Alerts" value={data.summary.criticalAlerts} icon={<AlertTriangle />} color="text-red-400" />
+        <KpiCard title="Total Monitored Articles" value={summary.totalArticles} icon={<FileTextIcon />} color="text-blue-400" />
+        <KpiCard title="Emerging Signals" value={summary.emergingSignals} icon={<TrendingUp />} color="text-green-400" />
+        <KpiCard title="Critical Alerts" value={summary.criticalAlerts} icon={<AlertTriangle />} color="text-red-400" />
       </div>
 
       {/* Top Signals */}
@@ -30,35 +33,43 @@ const ExecutiveDashboard = () => {
           Top Emerging Regulatory Signals
         </h3>
         <div className="flex-1 overflow-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 text-xs uppercase text-gray-500">
-                <th className="py-3 font-semibold">Signal</th>
-                <th className="py-3 font-semibold">Category</th>
-                <th className="py-3 font-semibold">Impact</th>
-                <th className="py-3 font-semibold">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.topSignals.map(sig => (
-                <tr key={sig.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="py-4 text-sm font-medium text-gray-200">{sig.title}</td>
-                  <td className="py-4 text-sm">
-                    <span className="px-2 py-1 rounded-full text-xs border border-white/10 bg-white/5 text-gray-300">
-                      {sig.category}
-                    </span>
-                  </td>
-                  <td className="py-4 text-sm">
-                    <span className={`flex items-center ${sig.impact === 'High' ? 'text-red-400' : 'text-yellow-400'}`}>
-                      {sig.impact === 'High' && <ShieldAlert size={14} className="mr-1" />}
-                      {sig.impact}
-                    </span>
-                  </td>
-                  <td className="py-4 text-sm text-cyan-400 font-mono">{sig.score}</td>
+          {topSignals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <p className="text-lg mb-2">📡 データを収集中です</p>
+              <p className="text-sm">GASのPhase1（main関数）を実行してニュースを取得し、</p>
+              <p className="text-sm">Phase4（runGeminiAnalysisBatch関数）で分析を行ってください。</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase text-gray-500">
+                  <th className="py-3 font-semibold">Signal</th>
+                  <th className="py-3 font-semibold">Category</th>
+                  <th className="py-3 font-semibold">Impact</th>
+                  <th className="py-3 font-semibold">Score</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {topSignals.map((sig: any, idx: number) => (
+                  <tr key={sig.id || idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="py-4 text-sm font-medium text-gray-200">{sig.title || 'No title'}</td>
+                    <td className="py-4 text-sm">
+                      <span className="px-2 py-1 rounded-full text-xs border border-white/10 bg-white/5 text-gray-300">
+                        {sig.category || 'Unknown'}
+                      </span>
+                    </td>
+                    <td className="py-4 text-sm">
+                      <span className={`flex items-center ${sig.impact === 'High' ? 'text-red-400' : 'text-yellow-400'}`}>
+                        {sig.impact === 'High' && <ShieldAlert size={14} className="mr-1" />}
+                        {sig.impact || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="py-4 text-sm text-cyan-400 font-mono">{sig.score || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
@@ -69,7 +80,7 @@ const KpiCard = ({ title, value, icon, color }: { title: string, value: number, 
   <div className="glass-card p-6 flex items-center justify-between">
     <div>
       <p className="text-sm text-gray-400 mb-1">{title}</p>
-      <p className="text-3xl font-bold text-white">{value}</p>
+      <p className="text-3xl font-bold text-white">{value ?? 0}</p>
     </div>
     <div className={`p-3 rounded-xl bg-white/5 ${color}`}>
       {icon}
