@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-200 antialiased overflow-hidden;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-surface border border-border backdrop-blur-md shadow-xl rounded-xl;
+  }
+  
+  .glass-card-hover {
+    @apply glass-card hover:bg-surfaceHover transition-all duration-300;
+  }
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02); 
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1); 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2); 
+}
