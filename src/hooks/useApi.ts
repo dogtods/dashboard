@@ -21,8 +21,14 @@ export function useApiData<T>(type: string, initialData: T | null = null) {
       })
       .then(resData => {
         if (mounted) {
-          setData(resData as T);
-          setError(null);
+          // GASがエラーを返した場合（{error: "..."}）のクラッシュ対策
+          if (resData && resData.error) {
+            setError(`GAS側のエラー: ${resData.error}`);
+            setData(null);
+          } else {
+            setData(resData as T);
+            setError(null);
+          }
         }
       })
       .catch(err => {
