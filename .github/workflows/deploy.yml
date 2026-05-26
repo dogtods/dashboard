@@ -34,9 +34,19 @@ jobs:
 
       # 環境変数（GASのAPI URL）をビルド時に埋め込む
       - name: Build
-        run: npm run build
         env:
           VITE_GAS_API_URL: ${{ secrets.VITE_GAS_API_URL }}
+        run: npm run build
+
+      - name: Check env exists
+        env:
+          VITE_GAS_API_URL: ${{ secrets.VITE_GAS_API_URL }}
+        run: |
+          if [ -z "$VITE_GAS_API_URL" ]; then
+            echo "EMPTY"
+          else
+            echo "SET"
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
